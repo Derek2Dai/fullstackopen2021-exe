@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import "./index.css";
 import PersonForm from "./components/PersonForm";
 import Filter from "./components/Filter";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 import phonebookservice from "./services/phonebook";
 
 const App = (props) => {
@@ -10,6 +12,11 @@ const App = (props) => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterName, setFilterName] = useState("");
+  const [message, setMessage] = useState({
+    msgtyp: "",
+    msgtxt: "",
+  });
+
   const effectHook = () => {
     phonebookservice.getAll().then((data) => {
       setPersons(data);
@@ -19,6 +26,16 @@ const App = (props) => {
   useEffect(effectHook, []);
   const addPerson = (event) => {
     event.preventDefault();
+    if (
+      unfilteredpersons.find(
+        (person) => person.name === newName && person.number === newNumber
+      )
+    ) {
+      setMessage({
+        msgtyp: "error",
+        msgtxt: `${newName} is already in phonebook with number ${newNumber}`,
+      });
+    }
     if (unfilteredpersons.find((person) => person.name === newName)) {
       const result = window.confirm(
         `${newName} is already added to phonebook, replace the old number with ${newNumber} ?`
@@ -44,6 +61,12 @@ const App = (props) => {
               );
             setNewName("");
             setNewNumber("");
+          })
+          .catch((error) => {
+            setMessage({
+              msgtyp: "error",
+              msgtxt: `Information of ${newName} has already been removed from server`,
+            });
           });
       }
     } else {
@@ -68,21 +91,20 @@ const App = (props) => {
         }
         setNewName("");
         setNewNumber("");
+        setMessage({ msgtyp: "success", msgtxt: `Added ${response.name}` });
       });
     }
   };
   const removePerson = (id) => {
-    const result = window.confirm(
-      `do you really want to delete ${
-        persons.filter((person) => person.id === id)[0].name
-      }`
-    );
+    const personName = persons.filter((person) => person.id === id)[0].name;
+    const result = window.confirm(`do you really want to delete ${personName}`);
     if (result) {
       phonebookservice.remove(id).then(() => {
         setUnfilteredpersons(
           unfilteredpersons.filter((person) => person.id !== id)
         );
         setPersons(persons.filter((person) => person.id !== id));
+        setMessage({ msgtyp: "success", msgtxt: `${personName} Deleted` });
       });
     }
   };
@@ -119,6 +141,7 @@ const App = (props) => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} />
       <Filter
         filterName={filterName}
         dynamicFilterNameList={dynamicFilterNameList}
