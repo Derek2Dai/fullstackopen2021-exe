@@ -15,9 +15,9 @@ const Country = ({ country }) => {
         temp: (res.data.main.temp - 273.15).toFixed(2),
         wind: res.data.wind.speed,
         icon:
-          "http://openweathermap.org/img/w/" +
+          "http://openweathermap.org/img/wn/" +
           res.data.weather[0].icon +
-          ".png",
+          "@2x.png",
       };
       setweatherData(neweatherData);
     });
